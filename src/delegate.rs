@@ -19,9 +19,7 @@ impl Delegate {
             subscribes: HashMap::new(),
         })
     }
-}
 
-impl Delegate {
     pub fn publish(&self, subject: &str, message: &Vec<u8>) -> Result<(), Box<dyn Error>> {
         match self.conn.publish(subject, message) {
             Ok(_) => Ok(()),
