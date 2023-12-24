@@ -38,20 +38,17 @@ pub fn deserialize(data: Vec<u8>) -> Result<Message, Box<dyn std::error::Error>>
     cursor.read_exact(&mut message_buffer)?;
 
     let reply_len = cursor.get_u64();
+    let mut reply_buffer = None;
     if reply_len > 0 {
         let mut reply_buffer = vec![0; reply_len as usize];
         cursor.read_exact(&mut reply_buffer)?;
 
-        return Ok(Message {
-            subject: String::from_utf8(subject_buffer)?,
-            data: message_buffer,
-            reply: Some(reply_buffer),
-        })
+        reply_buffer = Some(reply_buffer);
     }
 
     Ok(Message {
         subject: String::from_utf8(subject_buffer)?,
         data: message_buffer,
-        reply: None,
+        reply: reply_buffer,
     })
 }
