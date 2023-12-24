@@ -1,5 +1,6 @@
 pub mod delegate;
 pub mod callback;
+pub mod protocol;
 
 pub struct MySubscriber {
 }
