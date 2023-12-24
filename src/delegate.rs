@@ -50,7 +50,7 @@ impl Delegate {
                 let response = callback.on_subscription(&msg, msg.reply.is_some());
 
                 match msg.reply {
-                    Some(reply) => {
+                    Some(_) => {
                         match response {
                             Some(response) => {
                                 match msg.respond(response) {
