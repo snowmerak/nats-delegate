@@ -56,3 +56,13 @@ pub fn deserialize(data: Vec<u8>) -> Result<Message, Box<dyn std::error::Error>>
         reply: reply_buffer,
     })
 }
+
+impl Clone for Message {
+    fn clone(&self) -> Self {
+        Message {
+            subject: self.subject.clone(),
+            data: self.data.clone(),
+            reply: self.reply.clone(),
+        }
+    }
+}
