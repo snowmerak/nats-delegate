@@ -46,7 +46,7 @@ impl Delegate {
             loop {
                 let msg = match borrowed_sub.next() {
                     Some(msg) => msg,
-                    None => continue,
+                    None => break,
                 };
 
                 callback.on_subscription(&msg);
@@ -67,7 +67,6 @@ impl Delegate {
                     Ok(_) => {},
                     Err(e) => return Err(Box::new(e)),
                 }
-                println!("Unsubscribed from {}.", subject);
                 Ok(())
             },
             None => Ok(()),
