@@ -1,4 +1,4 @@
-use nats_delegate::delegate;
+use nats_delegate::{delegate, callback};
 
 #[tokio::main]
 async fn main() {
@@ -9,4 +9,19 @@ async fn main() {
     delg.publish("test", &"Hello, world!".as_bytes().to_vec()).unwrap();
 
     delg.unsubscribe("test").await.expect("Failed to unsubscribe.");
+}
+
+pub struct MySubscriber {
+}
+
+impl callback::SubscriptionCallback for MySubscriber {
+    fn on_subscription(&self, subscription: &nats::Message, is_request: bool) -> Option<Vec<u8>> {
+        println!("Received message: {}", String::from_utf8_lossy(&subscription.data));
+
+        if is_request {
+            Some("Hello, world!".as_bytes().to_vec())
+        } else {
+            None
+        }
+    }
 }
