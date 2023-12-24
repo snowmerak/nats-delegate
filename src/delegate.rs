@@ -47,7 +47,27 @@ impl Delegate {
                     None => break,
                 };
 
-                callback.on_subscription(&msg);
+                let response = callback.on_subscription(&msg, msg.reply.is_some());
+
+                match msg.reply {
+                    Some(reply) => {
+                        match response {
+                            Some(response) => {
+                                match msg.respond(response) {
+                                    Ok(_) => {},
+                                    Err(e) => println!("Failed to publish response: {}", e),
+                                }
+                            },
+                            None => {
+                                match msg.respond(&vec![]) {
+                                    Ok(_) => {},
+                                    Err(e) => println!("Failed to publish response: {}", e),
+                                }
+                            },
+                        }
+                    },
+                    None => {},
+                }
             }
         });
 
@@ -68,6 +88,13 @@ impl Delegate {
                 Ok(())
             },
             None => Ok(()),
+        }
+    }
+
+    pub async fn request(&self, subject: &str, message: &Vec<u8>) -> Result<Vec<u8>, Box<dyn Error>> {
+        match self.conn.request(subject, message) {
+            Ok(msg) => Ok(msg.data),
+            Err(e) => Err(Box::new(e)),
         }
     }
 }
