@@ -26,19 +26,20 @@ pub fn serialize(message: Message) -> Result<Vec<u8>, Box<dyn std::error::Error>
     Ok(buffer)
 }
 
-pub fn deserialize(data: Vec<u8>) -> Result<Message, Box<dyn std::error::Error>> {
+pub fn deserialize(data: Vec<u8>) -> Result<(Message, usize), Box<dyn std::error::Error>> {
     let mut cursor = 0 as usize;
 
     let subject_len = u64::from_be_bytes(data[cursor..cursor + 8].try_into()?);
     cursor += 8;
     let mut subject_buffer = vec![0; subject_len as usize];
     subject_buffer.copy_from_slice(&data[cursor..cursor + subject_len as usize]);
-    
+    cursor += subject_len as usize;
 
     let message_len = u64::from_be_bytes(data[cursor + subject_len as usize..cursor + subject_len as usize + 8].try_into()?);
     cursor += 8 + subject_len as usize;
     let mut message_buffer = vec![0; message_len as usize];
     message_buffer.copy_from_slice(&data[cursor..cursor + message_len as usize]);
+    cursor += message_len as usize;
 
     let reply_len = u64::from_be_bytes(data[cursor + message_len as usize..cursor + message_len as usize + 8].try_into()?);
     cursor += 8 + message_len as usize;
@@ -48,13 +49,14 @@ pub fn deserialize(data: Vec<u8>) -> Result<Message, Box<dyn std::error::Error>>
         buffer.copy_from_slice(&data[cursor..cursor + reply_len as usize]);
 
         reply_buffer = Some(buffer);
+        cursor += reply_len as usize;
     }
 
-    Ok(Message {
+    Ok((Message {
         subject: String::from_utf8(subject_buffer)?,
         data: message_buffer,
         reply: reply_buffer,
-    })
+    }, cursor))
 }
 
 impl Clone for Message {
