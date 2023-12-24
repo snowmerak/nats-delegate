@@ -2,6 +2,7 @@ pub mod delegate;
 pub mod callback;
 pub mod protocol;
 pub mod server;
+pub mod broadcaster;
 
 pub struct MySubscriber {
 }
