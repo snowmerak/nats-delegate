@@ -13,10 +13,10 @@ pub fn serialize(message: Message) -> Result<Vec<u8>, Box<dyn std::error::Error>
     buffer.extend_from_slice(&message.data.len().to_be_bytes());
     buffer.extend_from_slice(message.data.as_slice());
     
-    match reply {
+    match message.reply {
         Some(reply) => {
-            buffer.extend_from_slice(&message.reply.len().to_be_bytes());
-            buffer.extend_from_slice(message.reply.as_slice());
+            buffer.extend_from_slice(&reply.len().to_be_bytes());
+            buffer.extend_from_slice(reply.as_slice());
         },
         None => {
             buffer.extend_from_slice(&0u64.to_be_bytes());
@@ -27,23 +27,27 @@ pub fn serialize(message: Message) -> Result<Vec<u8>, Box<dyn std::error::Error>
 }
 
 pub fn deserialize(data: Vec<u8>) -> Result<Message, Box<dyn std::error::Error>> {
-    let mut cursor = std::io::Cursor::new(data);
+    let mut cursor = 0 as usize;
 
-    let subject_len = cursor.get_u64();
+    let subject_len = u64::from_be_bytes(data[cursor..cursor + 8].try_into()?);
+    cursor += 8;
     let mut subject_buffer = vec![0; subject_len as usize];
-    cursor.read_exact(&mut subject_buffer)?;
+    subject_buffer.copy_from_slice(&data[cursor..cursor + subject_len as usize]);
+    
 
-    let message_len = cursor.get_u64();
+    let message_len = u64::from_be_bytes(data[cursor + subject_len as usize..cursor + subject_len as usize + 8].try_into()?);
+    cursor += 8 + subject_len as usize;
     let mut message_buffer = vec![0; message_len as usize];
-    cursor.read_exact(&mut message_buffer)?;
+    message_buffer.copy_from_slice(&data[cursor..cursor + message_len as usize]);
 
-    let reply_len = cursor.get_u64();
+    let reply_len = u64::from_be_bytes(data[cursor + message_len as usize..cursor + message_len as usize + 8].try_into()?);
+    cursor += 8 + message_len as usize;
     let mut reply_buffer = None;
     if reply_len > 0 {
-        let mut reply_buffer = vec![0; reply_len as usize];
-        cursor.read_exact(&mut reply_buffer)?;
+        let mut buffer = vec![0; reply_len as usize];
+        buffer.copy_from_slice(&data[cursor..cursor + reply_len as usize]);
 
-        reply_buffer = Some(reply_buffer);
+        reply_buffer = Some(buffer);
     }
 
     Ok(Message {
